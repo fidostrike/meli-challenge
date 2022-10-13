@@ -1,6 +1,7 @@
 package com.entrevista.meli.melishows.Controller;
 
 import com.entrevista.meli.melishows.Model.Dto.ReservationTicketDto;
+import com.entrevista.meli.melishows.Model.Dto.ReservationTicketInputDto;
 import com.entrevista.meli.melishows.Model.Entity.Function;
 import com.entrevista.meli.melishows.Model.Entity.ReservationTicket;
 import com.entrevista.meli.melishows.Model.Entity.ReservationTicket_Seat;
@@ -38,23 +39,23 @@ public class ReservationTicketController extends ParentController{
 
     @Operation(description = "Envio los datos para realizar la reserva")
     @PostMapping(value = "/")
-    public ResponseEntity<ReservationTicketDto> doReservation(@RequestParam String dni, @RequestParam String fullName, @RequestParam Long functionId, @RequestParam Long[] lstSeatIds)
+    public ResponseEntity<ReservationTicketDto> doReservation(@RequestBody ReservationTicketInputDto inputDto)
     {
         ResponseEntity<ReservationTicketDto> result;
 
         //search de seats
-        List<Seat> lstSeats = iSeatService.findBySeatIdsFunction(lstSeatIds,functionId);
+        List<Seat> lstSeats = iSeatService.findBySeatIdsFunction(inputDto.getLstSeatIds(),inputDto.getFunctionId());
 
         if(lstSeats!=null) {
             //sum the price
             Double finalPrice = lstSeats.stream().map(seat -> seat.getGroupSeat().getLstPrice()).flatMap(Collection::stream).mapToDouble(price -> price.getPrice()).sum();
 
             //search the function
-            Function function = iFunctionService.findById(functionId);
+            Function function = iFunctionService.findById(inputDto.getFunctionId());
 
             ReservationTicket reservationTicket = new ReservationTicket();
-            reservationTicket.setDni(dni);
-            reservationTicket.setFullName(fullName);
+            reservationTicket.setDni(inputDto.getDni());
+            reservationTicket.setFullName(inputDto.getFullName());
             reservationTicket.setFinalPrice(finalPrice.floatValue());
 
             ReservationTicket finalReservationTicket = reservationTicket;
